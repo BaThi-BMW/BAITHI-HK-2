@@ -1,101 +1,98 @@
-// Đợi cho toàn bộ giao diện HTML tải xong mới chạy code JS
+/**
+ * VOGUE.VN - JavaScript Logic Control
+ * Xử lý popup đăng nhập, gửi bình luận động và điều hướng link liên quan.
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
     
-    /* ==========================================================================
-       1. XỬ LÝ POPUP ĐĂNG NHẬP (DÙNG CHO TRANG CHỦ)
-       ========================================================================== */
-    const modal = document.getElementById("loginModal");
+    // --- 1. XỬ LÝ POPUP ĐĂNG NHẬP ---
+    const loginModal = document.getElementById("loginModal");
     const loginBtn = document.getElementById("loginBtn");
     const closeBtn = document.getElementById("closeBtn");
+    const loginForm = loginModal?.querySelector("form");
 
-    // Nếu tồn tại nút Đăng nhập trên trang thì mới gán sự kiện
-    if (loginBtn && modal) {
-        // Mở popup khi click vào chữ Đăng Nhập trên Menu
+    if (loginBtn && loginModal) {
+        // Mở popup khi nhấn "Đăng Ngập" trên Menu
         loginBtn.addEventListener("click", function (e) {
-            e.preventDefault(); // Ngăn trang web nhảy trang hoặc cuộn lên đầu
-            modal.style.display = "flex";
+            e.preventDefault();
+            loginModal.style.display = "flex";
         });
 
-        // Đóng popup khi click vào dấu X
+        // Đóng bằng nút dấu X
         if (closeBtn) {
             closeBtn.addEventListener("click", function () {
-                modal.style.display = "none";
+                loginModal.style.display = "none";
             });
         }
 
-        // Đóng popup khi click ra ngoài vùng form đăng nhập
+        // Đóng khi click ra vùng trống ngoài biểu mẫu
         window.addEventListener("click", function (e) {
-            if (e.target === modal) {
-                modal.style.display = "none";
+            if (e.target === loginModal) {
+                loginModal.style.display = "none";
             }
         });
     }
 
-    // Xử lý khi người dùng nhấn nút "Vào hệ thống" trong Form Đăng nhập
-    const loginForm = document.querySelector("#loginModal form");
+    // Xử lý sự kiện gửi form Đăng nhập
     if (loginForm) {
         loginForm.addEventListener("submit", function (e) {
-            e.preventDefault(); // Ngăn load lại trang
-            const email = loginForm.querySelector("input[type='email']").value;
+            e.preventDefault();
+            const emailInput = loginForm.querySelector("input[type='email']");
             
-            alert(`Chào mừng thành viên ${email} đã đăng nhập thành công!`);
-            modal.style.display = "none"; // Ẩn popup đi
-            
-            // Đổi chữ "Đăng Nhập" trên menu thành "Tài Khoản"
-            if (loginBtn) loginBtn.textContent = "Tài Khoản";
+            if (emailInput) {
+                alert(`Chào mừng thành viên [ ${emailInput.value} ] đã đăng nhập thành công!`);
+                loginModal.style.display = "none";
+                
+                // Đổi trạng thái menu từ Đăng nhập thành Tài khoản
+                if (loginBtn) loginBtn.textContent = "Tài Khoản";
+                loginForm.reset();
+            }
         });
     }
 
 
-    /* ==========================================================================
-       2. XỬ LÝ THÊM BÌNH LUẬN ĐỘNG (DÙNG CHO TRANG CHI TIẾT)
-       ========================================================================== */
+    // --- 2. XỬ LÝ THÊM BÌNH LUẬN ĐỘNG (Trang Chi Tiết) ---
     const commentForm = document.querySelector(".comment-form");
     const commentList = document.querySelector(".comment-list");
 
     if (commentForm && commentList) {
         commentForm.addEventListener("submit", function (e) {
-            e.preventDefault(); // Ngăn trình duyệt load lại trang khi gửi form
+            e.preventDefault();
 
             const textarea = commentForm.querySelector("textarea");
-            const commentText = textarea.value.trim(); // Lấy nội dung bình luận và xóa khoảng trắng thừa
+            const content = textarea.value.trim();
 
-            if (commentText === "") {
-                alert("Vui lòng nhập nội dung phản hồi trước khi gửi!");
+            if (!content) {
+                alert("Vui lòng gõ nội dung phản hồi!");
                 return;
             }
 
-            // Tạo một khối div mới cho bình luận vừa nhập
-            const newComment = document.createElement("div");
-            newComment.classList.add("comment-item");
-            
-            // Chèn cấu trúc HTML chứa tên người dùng (mặc định Bạn) và nội dung bình luận
-            newComment.innerHTML = `
+            // Tạo cấu trúc phần tử bình luận mới
+            const item = document.createElement("div");
+            item.className = "comment-item";
+            item.innerHTML = `
                 <strong style="color: #ff3366;">Bạn (Vừa xong):</strong>
-                <p style="font-size: 14px; margin-top: 5px;">${commentText}</p>
+                <p style="font-size: 14px; margin-top: 5px;">${content}</p>
             `;
 
-            // Đưa bình luận mới lên đầu danh sách bình luận cũ
-            commentList.insertBefore(newComment, commentList.firstChild);
-
-            // Xóa sạch nội dung trong ô nhập liệu sau khi gửi thành công
+            // Chèn bình luận mới lên trên cùng danh sách
+            commentList.insertBefore(item, commentList.firstChild);
+            
+            // Reset lại ô nhập liệu và thông báo
             textarea.value = "";
-            alert("Bình luận của bạn đã được hiển thị công khai!");
+            alert("Bình luận của bạn đã được đăng công khai!");
         });
     }
 
 
-    /* ==========================================================================
-       3. TỰ ĐỘNG ĐỔI CÁC LINK LIÊN QUAN (MÔ PHỎNG SỰ KIỆN CLICK BÀI VIẾT)
-       ========================================================================== */
+    // --- 3. MÔ PHỎNG CLICK BÀI VIẾT LIÊN QUAN ---
     const relatedLinks = document.querySelectorAll(".related-links a");
     relatedLinks.forEach(link => {
-        link.addEventListener("click", function(e) {
-            // Nếu link chưa có trang thật (đang để dấu #), mô phỏng tải bài viết mới
-            if(this.getAttribute("href") === "#") {
+        link.addEventListener("click", function (e) {
+            if (this.getAttribute("href") === "#") {
                 e.preventDefault();
-                alert(`Hệ thống đang chuyển hướng bạn sang bài viết: "${this.innerText}"`);
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn mượt lên đầu trang
+                alert(`Hệ thống đang tải bài viết liên quan:\n"${this.innerText}"`);
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu trang mượt mà
             }
         });
     });
